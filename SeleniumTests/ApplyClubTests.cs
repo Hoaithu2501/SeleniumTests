@@ -18,7 +18,6 @@ namespace SeleniumTests
         private WebDriverWait wait;
         private string baseUrl = "http://127.0.0.1:5002";
 
-        // Thiết lập thời gian chờ để dễ quan sát (3000ms = 3 giây)
         private int slowDelay = 3000;
 
 
@@ -67,7 +66,7 @@ namespace SeleniumTests
             var clubCards = driver.FindElements(By.CssSelector(".club-item"));
             Assert.That(clubCards.Count, Is.GreaterThan(0), "Không có CLB nào được hiển thị trên trang!");
 
-            Thread.Sleep(slowDelay); // Dừng lại để xem các thẻ CLB
+            Thread.Sleep(slowDelay); 
         }
 
         // [TC1]: Kiểm tra nộp đơn THÀNH CÔNG từ trang DANH SÁCH (Club list)
@@ -94,7 +93,7 @@ namespace SeleniumTests
 
             var field = driver.FindElement(By.Id(modalId)).FindElement(By.Name("motivation"));
             Assert.That(field.GetAttribute("validationMessage"), Is.Not.Null.And.Not.Empty);
-            Thread.Sleep(slowDelay); // Quan sát tooltip cảnh báo của trình duyệt
+            Thread.Sleep(slowDelay); 
         }
 
         // [TC3]: Kiểm tra nộp đơn THÀNH CÔNG từ trang CHI TIẾT (Club detail)

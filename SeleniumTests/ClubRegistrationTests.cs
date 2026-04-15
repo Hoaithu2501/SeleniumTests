@@ -15,6 +15,8 @@ namespace SeleniumTests
         private WebDriverWait? wait;
         private string url = "http://127.0.0.1:5002";
 
+        private int slowDelay = 3000;
+
         [SetUp]
         public void Setup()
         {
@@ -25,20 +27,25 @@ namespace SeleniumTests
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
 
             driver.Navigate().GoToUrl(url + "/login");
+            Thread.Sleep(2000);
+
             var userInp = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("username")));
             userInp.SendKeys("Thư");
+            Thread.Sleep(500);
             driver.FindElement(By.Name("password")).SendKeys("123456");
+            Thread.Sleep(1000);
 
             var loginBtn = driver.FindElement(By.CssSelector("button[type='submit']"));
             ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", loginBtn);
 
-            Thread.Sleep(3000);
+            Thread.Sleep(slowDelay); 
         }
 
         [Test]
         public void Test_00_ClubRegistration_UI_Display()
         {
             driver!.Navigate().GoToUrl(url + "/student/club/register");
+            Thread.Sleep(slowDelay); 
 
             Assert.That(wait!.Until(driver => driver.FindElement(By.Name("club_name"))), Is.Not.Null);
             Assert.That(wait!.Until(driver => driver.FindElement(By.Name("field"))), Is.Not.Null);
@@ -48,6 +55,8 @@ namespace SeleniumTests
             Assert.That(wait!.Until(driver => driver.FindElement(By.Name("president_name"))), Is.Not.Null);
             Assert.That(wait!.Until(driver => driver.FindElement(By.Name("description"))), Is.Not.Null);
             Assert.That(wait!.Until(driver => driver.FindElement(By.CssSelector("button[type='submit']"))), Is.Not.Null);
+
+            Thread.Sleep(slowDelay); 
         }
 
         [Test]
@@ -62,9 +71,10 @@ namespace SeleniumTests
                 "clb" + id + "@neu.edu.vn",
                 "09123" + id);
 
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(15));
-            wait!.Until(d => d.Url.ToLower().Contains("dashboard"));
+            var wait = new WebDriverWait(driver!, TimeSpan.FromSeconds(15));
+            wait.Until(d => d.Url.ToLower().Contains("dashboard"));
 
+            Thread.Sleep(slowDelay); 
             Assert.That(driver!.Url.ToLower(), Does.Contain("dashboard"));
         }
 
@@ -72,6 +82,7 @@ namespace SeleniumTests
         public void Test_06_DupUser()
         {
             RunAction("C06", "Học thuật", "Thư", "Goal 06", "", "");
+            Thread.Sleep(slowDelay); 
             Assert.That(driver!.Url.ToLower(), Does.Contain("register"));
         }
 
@@ -79,6 +90,7 @@ namespace SeleniumTests
         public void Test_07_DupClub()
         {
             RunAction("CLB Am Nhac", "Học thuật", "u7", "Goal 07", "", "");
+            Thread.Sleep(slowDelay);
             Assert.That(driver!.Url.ToLower(), Does.Contain("register"));
         }
 
@@ -86,9 +98,14 @@ namespace SeleniumTests
         public void Test_08_Cancel()
         {
             driver!.Navigate().GoToUrl(url + "/student/club/register");
-            var cancelBtn = wait!.Until(ExpectedConditions.ElementExists(By.LinkText("Hủy bỏ")));
-            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", cancelBtn);
             Thread.Sleep(2000);
+
+            var cancelBtn = wait!.Until(ExpectedConditions.ElementExists(By.LinkText("Hủy bỏ")));
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", cancelBtn);
+            Thread.Sleep(1000);
+
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", cancelBtn);
+            Thread.Sleep(slowDelay); 
             Assert.That(driver.Url.ToLower(), Does.Contain("dashboard"));
         }
 
@@ -99,36 +116,47 @@ namespace SeleniumTests
             RunAction("C09 " + id, "Học thuật", "u9_" + id, "Goal 09", "", "");
 
             wait!.Until(d => d.Url.ToLower().Contains("dashboard"));
-
+            Thread.Sleep(slowDelay);
             Assert.That(driver!.Url.ToLower(), Does.Contain("dashboard"));
         }
-
 
         private void RunAction(string n, string f, string u, string m, string email, string phone)
         {
             driver!.Navigate().GoToUrl(url + "/student/club/register");
+            Thread.Sleep(2000);
+
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+
             var nameInput = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("club_name")));
             nameInput.Clear();
-            if (!string.IsNullOrEmpty(n)) nameInput.SendKeys(n);
+            if (!string.IsNullOrEmpty(n)) SendKeysSlowly(nameInput, n);
+
             if (!string.IsNullOrEmpty(f))
             {
-                new SelectElement(driver.FindElement(By.Name("field"))).SelectByText(f);
+                var fieldSelect = driver.FindElement(By.Name("field"));
+                new SelectElement(fieldSelect).SelectByText(f);
+                Thread.Sleep(1000);
             }
+
             var userInp = driver.FindElement(By.Name("intended_username"));
             userInp.Clear();
-            if (!string.IsNullOrEmpty(u)) userInp.SendKeys(u);
+            if (!string.IsNullOrEmpty(u)) SendKeysSlowly(userInp, u);
+
             var descInp = driver.FindElement(By.Name("description"));
             descInp.Clear();
-            if (!string.IsNullOrEmpty(m)) descInp.SendKeys(m);
+            if (!string.IsNullOrEmpty(m)) SendKeysSlowly(descInp, m);
+
             try
             {
-                if (!string.IsNullOrEmpty(email)) driver.FindElement(By.Name("email")).SendKeys(email);
-                if (!string.IsNullOrEmpty(phone)) driver.FindElement(By.Name("phone")).SendKeys(phone);
+                if (!string.IsNullOrEmpty(email)) SendKeysSlowly(driver.FindElement(By.Name("email")), email);
+                if (!string.IsNullOrEmpty(phone)) SendKeysSlowly(driver.FindElement(By.Name("phone")), phone);
             }
             catch { }
+
+            Thread.Sleep(1000); 
             var btn = driver.FindElement(By.CssSelector("button[type='submit']"));
-            // Thay thế 2 dòng ExecuteScript click bằng dòng này:
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true);", btn);
+            Thread.Sleep(1000);
             btn.Click();
         }
 
@@ -137,15 +165,20 @@ namespace SeleniumTests
             foreach (var character in value)
             {
                 element.SendKeys(character.ToString());
-                Thread.Sleep(1000); 
+                Thread.Sleep(150); 
             }
-            Thread.Sleep(5000); 
+            Thread.Sleep(300); 
         }
 
         [TearDown]
         public void Close()
         {
-            if (driver != null) { driver.Quit(); driver.Dispose(); }
+            if (driver != null)
+            {
+                Thread.Sleep(slowDelay); 
+                driver.Quit();
+                driver.Dispose();
+            }
         }
     }
 }

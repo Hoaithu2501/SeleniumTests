@@ -13,6 +13,7 @@ namespace SeleniumTests
     {
         private IWebDriver? driver;
         private string loginUrl = "http://127.0.0.1:5002/login";
+        private int slowDelay = 3000;
 
         [SetUp]
         public void Setup()
@@ -22,10 +23,13 @@ namespace SeleniumTests
             options.AddArgument("--window-size=1920,1080");
             driver = new ChromeDriver(options);
         }
+
         [Test]
         public void Test00_UI_Display()
         {
             driver!.Navigate().GoToUrl(loginUrl);
+            Thread.Sleep(slowDelay); 
+
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(15));
             Assert.Multiple(() =>
             {
@@ -33,6 +37,7 @@ namespace SeleniumTests
                 Assert.That(wait.Until(d => d.FindElement(By.Name("password"))).Displayed);
                 Assert.That(wait.Until(d => d.FindElement(By.CssSelector("button[type='submit']"))).Displayed);
             });
+            Thread.Sleep(slowDelay); 
         }
 
         // --- TEST 01: ĐĂNG NHẬP THÀNH CÔNG ---
@@ -43,8 +48,9 @@ namespace SeleniumTests
             LoginAction("admin", "admin123");
 
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            // Chờ đến khi chuyển trang (URL không còn chứa /login)
             wait.Until(d => !d.Url.ToLower().Contains("/login"));
+
+            Thread.Sleep(slowDelay); 
             Assert.That(driver.Url.ToLower(), Does.Not.Contain("login"));
         }
 
@@ -58,8 +64,7 @@ namespace SeleniumTests
             driver!.Navigate().GoToUrl(loginUrl);
             LoginAction(u, p);
 
-            Thread.Sleep(1500);
-            // Trình duyệt chặn nên URL vẫn là trang login
+            Thread.Sleep(2000); 
             Assert.That(driver.Url.ToLower(), Does.Contain("login"));
         }
 
@@ -85,14 +90,17 @@ namespace SeleniumTests
         public void Test07_Link_To_Register()
         {
             driver!.Navigate().GoToUrl(loginUrl);
+            Thread.Sleep(1500); 
+
             var wait = new WebDriverWait(driver!, TimeSpan.FromSeconds(10));
             var link = wait.Until(ExpectedConditions.ElementExists(By.CssSelector("a[href*='register']")));
 
             IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             js.ExecuteScript("arguments[0].scrollIntoView(true);", link);
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
             js.ExecuteScript("arguments[0].click();", link);
 
+            Thread.Sleep(slowDelay); 
             wait.Until(d => d.Url.ToLower().Contains("register"));
             Assert.That(driver.Url.ToLower(), Does.Contain("register"));
         }
@@ -102,10 +110,12 @@ namespace SeleniumTests
         public void Test08_Back_To_Home()
         {
             driver!.Navigate().GoToUrl(loginUrl);
+            Thread.Sleep(1500);
+
             var homeLink = driver!.FindElement(By.CssSelector("a[href='/']"));
             ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", homeLink);
 
-            Thread.Sleep(1500);
+            Thread.Sleep(slowDelay); 
             Assert.That(driver.Url.ToLower(), Is.Not.EqualTo(loginUrl));
         }
 
@@ -115,11 +125,15 @@ namespace SeleniumTests
             var wait = new WebDriverWait(driver!, TimeSpan.FromSeconds(10));
             var uInput = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("username")));
             uInput.Clear();
+            Thread.Sleep(300); 
             if (!string.IsNullOrEmpty(user)) uInput.SendKeys(user);
+            Thread.Sleep(500); 
 
             var pInput = driver!.FindElement(By.Name("password"));
             pInput.Clear();
+            Thread.Sleep(300);
             if (!string.IsNullOrEmpty(pass)) pInput.SendKeys(pass);
+            Thread.Sleep(1000); 
 
             var btn = driver.FindElement(By.CssSelector("button[type='submit']"));
             ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", btn);
@@ -130,9 +144,8 @@ namespace SeleniumTests
             var wait = new WebDriverWait(driver!, TimeSpan.FromSeconds(10));
             try
             {
-                // Tìm thông báo lỗi có class alert
                 var alert = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[contains(@class, 'alert')]")));
-                // Dùng Trim() để loại bỏ khoảng trắng thừa
+                Thread.Sleep(slowDelay); 
                 Assert.That(alert.Text.Trim(), Does.Contain(expected));
             }
             catch
@@ -146,6 +159,7 @@ namespace SeleniumTests
         {
             if (driver != null)
             {
+                Thread.Sleep(slowDelay); 
                 driver.Quit();
                 driver.Dispose();
             }

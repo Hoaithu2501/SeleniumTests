@@ -14,6 +14,8 @@ namespace SeleniumTests
         private IWebDriver? driver;
         private string registerUrl = "http://127.0.0.1:5002/register";
 
+        private int slowDelay = 3000;
+
         [SetUp]
         public void Setup()
         {
@@ -28,6 +30,7 @@ namespace SeleniumTests
         {
             driver.Navigate().GoToUrl("http://127.0.0.1:5002/register");
             driver.Manage().Window.Maximize();
+            Thread.Sleep(slowDelay); 
 
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
@@ -37,8 +40,9 @@ namespace SeleniumTests
             Assert.That(wait.Until(d => d.FindElement(By.Id("student_code"))), Is.Not.Null);
             Assert.That(wait.Until(d => d.FindElement(By.Id("full_name"))), Is.Not.Null);
             Assert.That(wait.Until(d => d.FindElement(By.CssSelector(".btn-register"))), Is.Not.Null);
-        }
 
+            Thread.Sleep(slowDelay); 
+        }
 
         [Test]
         public void Test01_Register_Success()
@@ -48,7 +52,7 @@ namespace SeleniumTests
             string user = "sv" + randomId;
             RegisterAction(user, user + "@neu.edu.vn", "Pass123456", "1123" + randomId.Substring(0, 4), "Sinh Viên Test");
 
-            Thread.Sleep(2000);
+            Thread.Sleep(slowDelay); 
             Assert.That(driver.Url, Does.Contain("login"));
         }
 
@@ -63,7 +67,7 @@ namespace SeleniumTests
             driver!.Navigate().GoToUrl(registerUrl);
             RegisterAction(u, e, p, m, n);
 
-            Thread.Sleep(1500);
+            Thread.Sleep(2000); 
             Assert.That(driver.Url, Does.Contain("register"), $"Thất bại tại: {TestContext.CurrentContext.Test.Name}");
         }
 
@@ -80,7 +84,7 @@ namespace SeleniumTests
         {
             driver!.Navigate().GoToUrl(registerUrl);
             RegisterAction("user8", "@neu.edu.vn", "Pass123456", "11223345", "Nguyễn Văn B");
-            Thread.Sleep(2000);
+            Thread.Sleep(slowDelay);
             // Trình duyệt chặn với thông báo "Please enter a part followed by '@'"
             Assert.That(driver.Url, Does.Contain("register"));
         }
@@ -115,12 +119,13 @@ namespace SeleniumTests
         public void Test12_Link_To_Login()
         {
             driver!.Navigate().GoToUrl(registerUrl);
+            Thread.Sleep(2000);
             IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             var link = driver.FindElement(By.XPath("//a[contains(text(), 'Đăng nhập')]"));
             js.ExecuteScript("arguments[0].scrollIntoView(true);", link);
             Thread.Sleep(1000);
             js.ExecuteScript("arguments[0].click();", link);
-            Thread.Sleep(2000);
+            Thread.Sleep(slowDelay); 
             Assert.That(driver.Url, Does.Contain("login"));
         }
 
@@ -128,29 +133,28 @@ namespace SeleniumTests
         public void Test13_Back_To_Home()
         {
             driver!.Navigate().GoToUrl(registerUrl);
-            Thread.Sleep(1000);
+            Thread.Sleep(1500);
             var link = driver.FindElement(By.CssSelector("a[href='/']"));
             ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", link);
-            Thread.Sleep(2000);
+            Thread.Sleep(slowDelay);
             Assert.That(driver.Url, Is.Not.EqualTo(registerUrl));
         }
 
         // --- HÀM HỖ TRỢ (HELPERS) ---
         private void RegisterAction(string user, string email, string pass, string msv, string name)
         {
-
             FillInput("username", user);
             FillInput("email", email);
             FillInput("password", pass);
             FillInput("student_code", msv);
             FillInput("full_name", name);
 
-            Thread.Sleep(1000);
+            Thread.Sleep(1000); 
 
             var btn = driver!.FindElement(By.CssSelector(".btn-register"));
             IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             js.ExecuteScript("arguments[0].scrollIntoView(true);", btn);
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
             js.ExecuteScript("arguments[0].click();", btn);
         }
 
@@ -158,8 +162,9 @@ namespace SeleniumTests
         {
             var element = driver!.FindElement(By.Id(fieldId));
             element.Clear();
+            Thread.Sleep(300); 
             if (!string.IsNullOrEmpty(value)) element.SendKeys(value);
-            Thread.Sleep(200);
+            Thread.Sleep(500); 
         }
 
         private void VerifyRegisterError(string expectedMessage)
@@ -168,11 +173,11 @@ namespace SeleniumTests
             try
             {
                 var alert = wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("alert-danger")));
+                Thread.Sleep(slowDelay); 
                 Assert.That(alert.Text, Does.Contain(expectedMessage));
             }
             catch
             {
-                // Backup check: nếu không thấy alert, chắc chắn trang không được chuyển hướng
                 Assert.That(driver!.Url, Does.Contain("register"));
             }
         }
@@ -182,6 +187,7 @@ namespace SeleniumTests
         {
             if (driver != null)
             {
+                Thread.Sleep(slowDelay); 
                 driver.Quit();
                 driver.Dispose();
             }
